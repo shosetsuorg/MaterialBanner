@@ -52,7 +52,7 @@ class ButtonsContainer @JvmOverloads constructor(
 		}
 		if (rightButton.visibility != GONE) {
 			measureChildWithMargins(rightButton, widthMeasureSpec, 0, heightMeasureSpec, 0)
-			widthUsed += measuredWidth + mButtonMarginEnd
+			widthUsed += rightButton.measuredWidth + mButtonMarginEnd
 		}
 
 		// Allow orientation change only when the both buttons are not hidden
@@ -81,8 +81,8 @@ class ButtonsContainer @JvmOverloads constructor(
 			heightUsed += leftButton.measuredHeight + mButtonMarginBottom
 		}
 		if (rightButton.visibility != GONE) {
-			widthUsed = max(widthUsed, measuredWidth + mButtonMarginEnd)
-			heightUsed += measuredHeight + mButtonMarginBottom
+			widthUsed = max(widthUsed, rightButton.measuredWidth + mButtonMarginEnd)
+			heightUsed +=rightButton. measuredHeight + mButtonMarginBottom
 		}
 		setMeasuredDimension(widthUsed, heightUsed)
 	}
@@ -98,10 +98,10 @@ class ButtonsContainer @JvmOverloads constructor(
 			heightUsed = leftButton.measuredHeight + mButtonMarginBottom
 		}
 		if (rightButton.visibility != GONE) {
-			widthUsed += measuredWidth + mButtonMarginEnd
+			widthUsed += rightButton.measuredWidth + mButtonMarginEnd
 			heightUsed = max(
 				heightUsed,
-				measuredHeight + mButtonMarginBottom
+				rightButton.measuredHeight + mButtonMarginBottom
 			)
 		}
 		setMeasuredDimension(widthUsed, heightUsed)
@@ -124,16 +124,16 @@ class ButtonsContainer @JvmOverloads constructor(
 		var lBtnRight = measuredWidth - mButtonMarginEnd
 		var lBtnLeft = lBtnRight - leftButton.measuredWidth
 		var rBtnRight = measuredWidth - mButtonMarginEnd
-		var rBtnLeft = rBtnRight - measuredWidth
+		var rBtnLeft = rBtnRight - rightButton.measuredWidth
 		if (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL) {
 			lBtnLeft = mButtonMarginEnd
 			lBtnRight = lBtnLeft + leftButton.measuredWidth
 			rBtnLeft = mButtonMarginEnd
-			rBtnRight = rBtnLeft + measuredWidth
+			rBtnRight = rBtnLeft + rightButton.measuredWidth
 		}
 		if (rightButton.visibility != GONE) {
-			layout(rBtnLeft, top, rBtnRight, measuredHeight)
-			top += measuredHeight + mButtonMarginBottom
+			rightButton.layout(rBtnLeft, top, rBtnRight, rightButton.measuredHeight)
+			top += rightButton.measuredHeight + mButtonMarginBottom
 		}
 		if (leftButton.visibility != GONE) {
 			leftButton.layout(lBtnLeft, top, lBtnRight, top + leftButton.measuredHeight)
@@ -148,10 +148,10 @@ class ButtonsContainer @JvmOverloads constructor(
 		var lBtnRight = leftButton.measuredWidth
 		var lBtnLeft = 0
 		var rBtnRight = measuredWidth - mButtonMarginEnd
-		var rBtnLeft = rBtnRight - measuredWidth
+		var rBtnLeft = rBtnRight -rightButton. measuredWidth
 		if (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL) {
 			rBtnLeft = mButtonMarginEnd
-			rBtnRight = rBtnLeft + measuredWidth
+			rBtnRight = rBtnLeft + rightButton.measuredWidth
 			lBtnRight = measuredWidth
 			lBtnLeft = lBtnRight - leftButton.measuredWidth
 		}
@@ -159,7 +159,7 @@ class ButtonsContainer @JvmOverloads constructor(
 			leftButton.layout(lBtnLeft, 0, lBtnRight, leftButton.measuredHeight)
 		}
 		if (rightButton.visibility != GONE) {
-			layout(rBtnLeft, 0, rBtnRight, measuredHeight)
+			rightButton.layout(rBtnLeft, 0, rBtnRight, rightButton.measuredHeight)
 		}
 	}
 
