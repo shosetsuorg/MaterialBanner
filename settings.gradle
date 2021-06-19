@@ -1,1 +1,2 @@
-include ':library', ':app'
+rootProject.buildFileName = "build.gradle.kts"
+include(":library", ":app")
