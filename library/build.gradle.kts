@@ -1,10 +1,10 @@
 plugins {
 	id("com.android.library")
 	kotlin("android")
-	//`maven-publish`
+	`maven-publish`
 }
 
-group = "app.shosetsu.lib.material-banner"
+group = "app.shosetsu.lib"
 version = "2.0.5"
 
 
@@ -20,13 +20,13 @@ android {
 		resValue("string", "materialbanner_lib_version", "${versionName}")
 	}
 	buildTypes {
-		create("release") {
+		named("release") {
 			minifyEnabled(false)
 			consumerProguardFiles("proguard-rules.pro")
 		}
 	}
 }
-/*
+
 afterEvaluate {
 	publishing {
 		publications {
@@ -40,8 +40,6 @@ afterEvaluate {
 
 	}
 }
-
- */
 
 dependencies {
 	implementation("androidx.core:core:1.6.0-rc01")
