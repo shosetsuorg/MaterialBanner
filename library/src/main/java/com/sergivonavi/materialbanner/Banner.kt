@@ -1279,17 +1279,16 @@ class Banner @JvmOverloads constructor(
 							+ "Call Banner.Builder#setParent() to set the parent view."
 				)
 			}
-			val banner = Banner(mContext).apply {
-				id = if (mId != 0) mId else R.id.mb_banner
-				setIcon(mIcon)
-				setMessage(mMessageText)
-				setLeftButton(mLeftBtnText, mLeftBtnListener)
-				setRightButton(mRightBtnText, mRightBtnListener)
-				setOnDismissListener(mOnDismissListener)
-				setOnShowListener(mOnShowListener)
-				layoutParams = mParams
-				visibility = GONE
-			}
+			val banner = Banner(mContext)
+			banner.id = if (mId != 0) mId else R.id.mb_banner
+			banner.setIcon(mIcon)
+			banner.setMessage(mMessageText)
+			banner.setLeftButton(mLeftBtnText, mLeftBtnListener)
+			banner.setRightButton(mRightBtnText, mRightBtnListener)
+			banner.setOnDismissListener(mOnDismissListener)
+			banner.setOnShowListener(mOnShowListener)
+			banner.layoutParams = mParams
+			banner.visibility = GONE
 
 			mParent!!.addView(banner, mChildIndex)
 			return banner
