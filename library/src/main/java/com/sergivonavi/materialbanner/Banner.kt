@@ -70,10 +70,6 @@ class Banner @JvmOverloads constructor(
 	attrs: AttributeSet? = null,
 	defStyleAttr: Int = R.attr.bannerStyle
 ) : ViewGroup(context, attrs, defStyleAttr), BannerInterface {
-	@IntDef(value = [VISIBLE, INVISIBLE, GONE])
-	@Retention(AnnotationRetention.SOURCE)
-	private annotation class Visibility
-
 	private var mContentContainer: RelativeLayout? = null
 	private var mIconView: AppCompatImageView? = null
 	private var mMessageView: MessageView? = null
@@ -116,6 +112,54 @@ class Banner @JvmOverloads constructor(
 	private var mRightButtonListener: BannerInterface.OnClickListener? = null
 	private var mOnDismissListener: BannerInterface.OnDismissListener? = null
 	private var mOnShowListener: BannerInterface.OnShowListener? = null
+	private val mAnimatorListener: AnimatorListenerAdapter = object : AnimatorListenerAdapter() {
+		override fun onAnimationStart(animation: Animator) {
+			// onAnimationStart is invoked immediately after calling AnimatorSet.start()
+			postDelayed({
+				mIsAnimating = true
+				if (animation.duration == ANIM_DURATION_SHOW) {
+					visibility = VISIBLE
+				}
+			}, animation.startDelay)
+		}
+
+		override fun onAnimationEnd(animation: Animator) {
+			mIsAnimating = false
+			if (animation.duration == ANIM_DURATION_DISMISS) {
+				visibility = GONE
+
+				// Reset to default
+				val layoutParams = layoutParams as MarginLayoutParams
+				layoutParams.bottomMargin = mMarginBottom
+				setLayoutParams(layoutParams)
+				translationY = 0f
+			}
+			if (isShown) {
+				dispatchOnShow()
+			} else {
+				dispatchOnDismiss()
+			}
+		}
+	}
+
+	/**
+	 * Calculates the horizontal padding of the inner container.
+	 *
+	 * @return the total horizontal padding in pixels
+	 */
+	private val containerHorizontalPadding: Int
+		get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+			mContentContainer!!.paddingStart + mContentContainer!!.paddingEnd
+		} else {
+			mContentContainer!!.paddingLeft + mContentContainer!!.paddingRight
+		}
+
+	init {
+		loadDimens(context)
+		initViewGroup(context)
+		retrieveAttrs(context, attrs, defStyleAttr)
+	}
+
 	private fun loadDimens(context: Context) {
 		mWideLayout = context.resources.getBoolean(R.bool.mb_wide_layout)
 		mIconSize = getDimen(R.dimen.mb_icon_size)
@@ -871,36 +915,6 @@ class Banner @JvmOverloads constructor(
 		animatorSet.start()
 	}
 
-	private val mAnimatorListener: AnimatorListenerAdapter = object : AnimatorListenerAdapter() {
-		override fun onAnimationStart(animation: Animator) {
-			// onAnimationStart is invoked immediately after calling AnimatorSet.start()
-			postDelayed({
-				mIsAnimating = true
-				if (animation.duration == ANIM_DURATION_SHOW) {
-					visibility = VISIBLE
-				}
-			}, animation.startDelay)
-		}
-
-		override fun onAnimationEnd(animation: Animator) {
-			mIsAnimating = false
-			if (animation.duration == ANIM_DURATION_DISMISS) {
-				visibility = GONE
-
-				// Reset to default
-				val layoutParams = layoutParams as MarginLayoutParams
-				layoutParams.bottomMargin = mMarginBottom
-				setLayoutParams(layoutParams)
-				translationY = 0f
-			}
-			if (isShown) {
-				dispatchOnShow()
-			} else {
-				dispatchOnDismiss()
-			}
-		}
-	}
-
 	private fun dispatchOnShow() {
 		if (mOnShowListener != null) {
 			mOnShowListener!!.onShow()
@@ -912,18 +926,6 @@ class Banner @JvmOverloads constructor(
 			mOnDismissListener!!.onDismiss()
 		}
 	}
-
-	/**
-	 * Calculates the horizontal padding of the inner container.
-	 *
-	 * @return the total horizontal padding in pixels
-	 */
-	private val containerHorizontalPadding: Int
-		get() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-			mContentContainer!!.paddingStart + mContentContainer!!.paddingEnd
-		} else {
-			mContentContainer!!.paddingLeft + mContentContainer!!.paddingRight
-		}
 
 	/**
 	 * Sets the padding to the container view.
@@ -956,9 +958,8 @@ class Banner @JvmOverloads constructor(
 	 * integer pixels.
 	 * @see android.content.res.Resources.getDimensionPixelSize
 	 */
-	private fun getDimen(@DimenRes dimenRes: Int): Int {
-		return context.resources.getDimensionPixelSize(dimenRes)
-	}
+	private fun getDimen(@DimenRes dimenRes: Int): Int =
+		context.resources.getDimensionPixelSize(dimenRes)
 
 	override fun onSaveInstanceState(): Parcelable {
 		val superState = super.onSaveInstanceState()
@@ -977,6 +978,9 @@ class Banner @JvmOverloads constructor(
 		visibility = state.visibility
 	}
 
+	@IntDef(value = [VISIBLE, INVISIBLE, GONE])
+	@Retention(AnnotationRetention.SOURCE)
+	private annotation class Visibility
 	private class SavedState : BaseSavedState {
 		var visibility = 0
 
@@ -1000,10 +1004,24 @@ class Banner @JvmOverloads constructor(
 		}
 	}
 
-
 	class Builder {
+
 		@Suppress("JoinDeclarationAndAssignment") // Ignore to maintain documentation
-		private val mContext: Context
+		val context: Context
+		var parent: ViewGroup? = null
+		var childIndex = 0
+		var params: LayoutParams? = null
+
+		@IdRes
+		var id = 0
+		var icon: Drawable? = null
+		var messageText: String? = null
+		var leftBtnText: String? = null
+		var rightBtnText: String? = null
+		var leftBtnListener: BannerInterface.OnClickListener? = null
+		var mRightBtnListener: BannerInterface.OnClickListener? = null
+		var mOnDismissListener: BannerInterface.OnDismissListener? = null
+		var mOnShowListener: BannerInterface.OnShowListener? = null
 
 		/**
 		 * Creates a builder for a banner that uses the default banner style (either specified in
@@ -1017,23 +1035,8 @@ class Banner @JvmOverloads constructor(
 		 * @param context the parent context
 		 */
 		constructor(context: Context) {
-			mContext = context
+			this.context = context
 		}
-
-		private var mParent: ViewGroup? = null
-		private var mChildIndex = 0
-		private var mParams: LayoutParams? = null
-
-		@IdRes
-		private var mId = 0
-		private var mIcon: Drawable? = null
-		private var mMessageText: String? = null
-		private var mLeftBtnText: String? = null
-		private var mRightBtnText: String? = null
-		private var mLeftBtnListener: BannerInterface.OnClickListener? = null
-		private var mRightBtnListener: BannerInterface.OnClickListener? = null
-		private var mOnDismissListener: BannerInterface.OnDismissListener? = null
-		private var mOnShowListener: BannerInterface.OnShowListener? = null
 
 		/**
 		 * Creates a builder for a banner that uses an explicit style resource.
@@ -1102,9 +1105,9 @@ class Banner @JvmOverloads constructor(
 			parent: ViewGroup, index: Int,
 			params: LayoutParams?
 		): Builder {
-			mParent = parent
-			mChildIndex = index
-			mParams = params
+			this.parent = parent
+			childIndex = index
+			this.params = params
 			return this
 		}
 
@@ -1115,7 +1118,7 @@ class Banner @JvmOverloads constructor(
 		 * @return the [Builder] object to chain calls
 		 */
 		fun setId(@IdRes id: Int): Builder {
-			mId = id
+			this.id = id
 			return this
 		}
 
@@ -1125,7 +1128,7 @@ class Banner @JvmOverloads constructor(
 		 * @return the [Builder] object to chain calls
 		 */
 		fun setIcon(@DrawableRes iconId: Int): Builder {
-			mIcon = ContextCompat.getDrawable(mContext, iconId)
+			icon = ContextCompat.getDrawable(context, iconId)
 			return this
 		}
 
@@ -1135,7 +1138,7 @@ class Banner @JvmOverloads constructor(
 		 * @return the [Builder] object to chain calls
 		 */
 		fun setIcon(icon: Drawable?): Builder {
-			mIcon = icon
+			this.icon = icon
 			return this
 		}
 
@@ -1145,7 +1148,7 @@ class Banner @JvmOverloads constructor(
 		 * @return the [Builder] object to chain calls
 		 */
 		fun setMessage(@StringRes textId: Int): Builder {
-			mMessageText = mContext.getString(textId)
+			messageText = context.getString(textId)
 			return this
 		}
 
@@ -1155,7 +1158,7 @@ class Banner @JvmOverloads constructor(
 		 * @return the [Builder] object to chain calls
 		 */
 		fun setMessage(text: String): Builder {
-			mMessageText = text
+			messageText = text
 			return this
 		}
 
@@ -1174,7 +1177,7 @@ class Banner @JvmOverloads constructor(
 			@StringRes textId: Int,
 			listener: BannerInterface.OnClickListener?
 		): Builder {
-			setLeftButton(mContext.getString(textId), listener)
+			setLeftButton(context.getString(textId), listener)
 			return this
 		}
 
@@ -1194,8 +1197,8 @@ class Banner @JvmOverloads constructor(
 			text: String,
 			listener: BannerInterface.OnClickListener?
 		): Builder {
-			mLeftBtnText = text
-			mLeftBtnListener = listener
+			leftBtnText = text
+			leftBtnListener = listener
 			return this
 		}
 
@@ -1214,7 +1217,7 @@ class Banner @JvmOverloads constructor(
 			@StringRes textId: Int,
 			listener: BannerInterface.OnClickListener?
 		): Builder {
-			setRightButton(mContext.getString(textId), listener)
+			setRightButton(context.getString(textId), listener)
 			return this
 		}
 
@@ -1234,7 +1237,7 @@ class Banner @JvmOverloads constructor(
 			text: String,
 			listener: BannerInterface.OnClickListener?
 		): Builder {
-			mRightBtnText = text
+			rightBtnText = text
 			mRightBtnListener = listener
 			return this
 		}
@@ -1273,24 +1276,24 @@ class Banner @JvmOverloads constructor(
 		 */
 		@Throws(NullPointerException::class)
 		fun create(): Banner {
-			if (mParent == null) {
+			if (parent == null) {
 				throw NullPointerException(
 					"The parent view must not be null! "
 							+ "Call Banner.Builder#setParent() to set the parent view."
 				)
 			}
-			val banner = Banner(mContext)
-			banner.id = if (mId != 0) mId else R.id.mb_banner
-			banner.setIcon(mIcon)
-			banner.setMessage(mMessageText)
-			banner.setLeftButton(mLeftBtnText, mLeftBtnListener)
-			banner.setRightButton(mRightBtnText, mRightBtnListener)
+			val banner = Banner(context)
+			banner.id = if (id != 0) id else R.id.mb_banner
+			banner.setIcon(icon)
+			banner.setMessage(messageText)
+			banner.setLeftButton(leftBtnText, leftBtnListener)
+			banner.setRightButton(rightBtnText, mRightBtnListener)
 			banner.setOnDismissListener(mOnDismissListener)
 			banner.setOnShowListener(mOnShowListener)
-			banner.layoutParams = mParams
+			banner.layoutParams = params
 			banner.visibility = GONE
 
-			mParent!!.addView(banner, mChildIndex)
+			parent!!.addView(banner, childIndex)
 			return banner
 		}
 
@@ -1318,11 +1321,5 @@ class Banner @JvmOverloads constructor(
 		private const val LAYOUT_MULTILINE = 1
 		private const val ANIM_DURATION_DISMISS = 160L
 		private const val ANIM_DURATION_SHOW = 180L
-	}
-
-	init {
-		loadDimens(context)
-		initViewGroup(context)
-		retrieveAttrs(context, attrs, defStyleAttr)
 	}
 }
