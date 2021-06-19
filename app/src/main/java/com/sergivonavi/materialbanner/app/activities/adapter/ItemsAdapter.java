@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class ItemsAdapter extends RecyclerView.Adapter<ItemViewHolder> {
 
-    private LayoutInflater mLayoutInflater;
+    private final LayoutInflater mLayoutInflater;
     private final List<String> mList = new ArrayList<>();
 
     public ItemsAdapter(Context context) {
@@ -40,16 +40,11 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull final ItemViewHolder holder, final int position) {
-        holder.image.post(new Runnable() {
-            @Override
-            public void run() {
-                Picasso.get()
-                        .load(mList.get(position))
-                        .resize(holder.image.getWidth(), holder.image.getHeight())
-                        .centerCrop()
-                        .into(holder.image);
-            }
-        });
+        holder.image.post(() -> Picasso.get()
+                .load(mList.get(position))
+                .resize(holder.image.getWidth(), holder.image.getHeight())
+                .centerCrop()
+                .into(holder.image));
     }
 
     @Override

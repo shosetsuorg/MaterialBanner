@@ -3,11 +3,10 @@ package com.sergivonavi.materialbanner.app.activities;
 import android.os.Bundle;
 import android.view.ViewGroup;
 
-import com.sergivonavi.materialbanner.BannerInterface;
+import androidx.annotation.Nullable;
+
 import com.sergivonavi.materialbanner.app.R;
 import com.sergivonavi.materialbanner.app.utils.SnackbarHelper;
-
-import androidx.annotation.Nullable;
 
 public class GlobalStyleActivity extends BaseSampleActivity {
 
@@ -26,29 +25,9 @@ public class GlobalStyleActivity extends BaseSampleActivity {
 
         mBanner = findViewById(R.id.banner);
 
-        mBanner.setLeftButtonListener(new BannerInterface.OnClickListener() {
-            @Override
-            public void onClick(BannerInterface banner) {
-                SnackbarHelper.show(rootView, R.string.msg_banner_btnleft);
-            }
-        });
-        mBanner.setRightButtonListener(new BannerInterface.OnClickListener() {
-            @Override
-            public void onClick(BannerInterface banner) {
-                SnackbarHelper.show(rootView, R.string.msg_banner_btnright);
-            }
-        });
-        mBanner.setOnShowListener(new BannerInterface.OnShowListener() {
-            @Override
-            public void onShow() {
-                SnackbarHelper.show(rootView, R.string.msg_banner_onshow);
-            }
-        });
-        mBanner.setOnDismissListener(new BannerInterface.OnDismissListener() {
-            @Override
-            public void onDismiss() {
-                SnackbarHelper.show(rootView, R.string.msg_banner_ondismiss);
-            }
-        });
+        mBanner.setLeftButtonListener(banner -> SnackbarHelper.show(rootView, R.string.msg_banner_btnleft));
+        mBanner.setRightButtonListener(banner -> SnackbarHelper.show(rootView, R.string.msg_banner_btnright));
+        mBanner.setOnShowListener(() -> SnackbarHelper.show(rootView, R.string.msg_banner_onshow));
+        mBanner.setOnDismissListener(() -> SnackbarHelper.show(rootView, R.string.msg_banner_ondismiss));
     }
 }
