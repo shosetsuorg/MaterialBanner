@@ -13,292 +13,246 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.sergivonavi.materialbanner.internal
 
-package com.sergivonavi.materialbanner.internal;
-
-import android.content.Context;
-import android.os.Build;
-import android.util.AttributeSet;
-import android.view.ViewGroup;
-
-import com.google.android.material.button.MaterialButton;
-import com.sergivonavi.materialbanner.R;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-import androidx.annotation.DimenRes;
-import androidx.annotation.IntDef;
-import androidx.annotation.RestrictTo;
-import androidx.core.view.ViewCompat;
-
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+import android.content.Context
+import android.os.Build
+import android.util.AttributeSet
+import android.view.ViewGroup
+import androidx.annotation.DimenRes
+import androidx.annotation.IntDef
+import androidx.annotation.RestrictTo
+import androidx.core.view.ViewCompat
+import com.google.android.material.button.MaterialButton
+import com.sergivonavi.materialbanner.R
+import kotlin.math.max
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class ButtonsContainer extends ViewGroup {
+class ButtonsContainer @JvmOverloads constructor(
+	context: Context,
+	attrs: AttributeSet? = null,
+	defStyleAttr: Int = 0
+) : ViewGroup(context, attrs, defStyleAttr) {
+	@IntDef(HORIZONTAL, VERTICAL)
+	@Retention(AnnotationRetention.SOURCE)
+	private annotation class OrientationMode
 
-    @IntDef({HORIZONTAL, VERTICAL})
-    @Retention(RetentionPolicy.SOURCE)
-    private @interface OrientationMode {}
+	val leftButton: MaterialButton
+	val rightButton: MaterialButton
 
-    public static final int HORIZONTAL = 0;
-    public static final int VERTICAL = 1;
+	private val mButtonMarginEnd: Int
+	private val mButtonMarginBottom: Int
+	private var mOrientation: Int = 0
 
-    private MaterialButton mLeftButton;
-    private MaterialButton mRightButton;
+	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+		var widthUsed = 0
+		if (leftButton.visibility != GONE) {
+			measureChildWithMargins(leftButton, widthMeasureSpec, 0, heightMeasureSpec, 0)
+			widthUsed += leftButton.measuredWidth + mButtonMarginEnd
+		}
+		if (visibility != GONE) {
+			measureChildWithMargins(rightButton, widthMeasureSpec, 0, heightMeasureSpec, 0)
+			widthUsed += measuredWidth + mButtonMarginEnd
+		}
 
-    private int mButtonMarginEnd;
-    private int mButtonMarginBottom;
+		// Allow orientation change only when the both buttons are not hidden
+		if (leftButton.visibility != GONE && visibility != GONE) {
+			mOrientation = if (widthUsed > MeasureSpec.getSize(widthMeasureSpec)) {
+				VERTICAL
+			} else {
+				HORIZONTAL
+			}
+		}
+		if (mOrientation == VERTICAL) {
+			measureVertical()
+		} else {
+			measureHorizontal()
+		}
+	}
 
-    private int mOrientation;
+	/**
+	 * Measures the children when the orientation of this view is set to [.VERTICAL].
+	 */
+	private fun measureVertical() {
+		var widthUsed = 0
+		var heightUsed = 0
+		if (leftButton.visibility != GONE) {
+			widthUsed = leftButton.measuredWidth + mButtonMarginEnd
+			heightUsed += leftButton.measuredHeight + mButtonMarginBottom
+		}
+		if (visibility != GONE) {
+			widthUsed = max(widthUsed, measuredWidth + mButtonMarginEnd)
+			heightUsed += measuredHeight + mButtonMarginBottom
+		}
+		setMeasuredDimension(widthUsed, heightUsed)
+	}
 
-    public ButtonsContainer(Context context) {
-        this(context, null);
-    }
+	/**
+	 * Measures the children when the orientation of this view is set to [.HORIZONTAL].
+	 */
+	private fun measureHorizontal() {
+		var widthUsed = 0
+		var heightUsed = 0
+		if (leftButton.visibility != GONE) {
+			widthUsed += leftButton.measuredWidth + mButtonMarginEnd
+			heightUsed = leftButton.measuredHeight + mButtonMarginBottom
+		}
+		if (visibility != GONE) {
+			widthUsed += measuredWidth + mButtonMarginEnd
+			heightUsed = max(
+				heightUsed,
+				measuredHeight + mButtonMarginBottom
+			)
+		}
+		setMeasuredDimension(widthUsed, heightUsed)
+	}
 
-    public ButtonsContainer(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
+	override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+		if (mOrientation == VERTICAL) {
+			layoutVertical()
+		} else {
+			layoutHorizontal()
+		}
+	}
 
-    public ButtonsContainer(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context);
-    }
+	/**
+	 * Position the children during a layout pass if the orientation of this view is set to
+	 * [.VERTICAL].
+	 */
+	private fun layoutVertical() {
+		var top = 0
+		var lBtnRight = measuredWidth - mButtonMarginEnd
+		var lBtnLeft = lBtnRight - leftButton.measuredWidth
+		var rBtnRight = measuredWidth - mButtonMarginEnd
+		var rBtnLeft = rBtnRight - measuredWidth
+		if (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL) {
+			lBtnLeft = mButtonMarginEnd
+			lBtnRight = lBtnLeft + leftButton.measuredWidth
+			rBtnLeft = mButtonMarginEnd
+			rBtnRight = rBtnLeft + measuredWidth
+		}
+		if (visibility != GONE) {
+			layout(rBtnLeft, top, rBtnRight, measuredHeight)
+			top += measuredHeight + mButtonMarginBottom
+		}
+		if (leftButton.visibility != GONE) {
+			leftButton.layout(lBtnLeft, top, lBtnRight, top + leftButton.measuredHeight)
+		}
+	}
 
-    private void init(Context context) {
-        mButtonMarginEnd = getDimen(R.dimen.mb_button_margin_end);
-        mButtonMarginBottom = getDimen(R.dimen.mb_button_margin_bottom);
+	/**
+	 * Position the children during a layout pass if the orientation of this view is set to
+	 * [.HORIZONTAL].
+	 */
+	private fun layoutHorizontal() {
+		var lBtnRight = leftButton.measuredWidth
+		var lBtnLeft = 0
+		var rBtnRight = measuredWidth - mButtonMarginEnd
+		var rBtnLeft = rBtnRight - measuredWidth
+		if (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL) {
+			rBtnLeft = mButtonMarginEnd
+			rBtnRight = rBtnLeft + measuredWidth
+			lBtnRight = measuredWidth
+			lBtnLeft = lBtnRight - leftButton.measuredWidth
+		}
+		if (leftButton.visibility != GONE) {
+			leftButton.layout(lBtnLeft, 0, lBtnRight, leftButton.measuredHeight)
+		}
+		if (visibility != GONE) {
+			layout(rBtnLeft, 0, rBtnRight, measuredHeight)
+		}
+	}
 
-        MarginLayoutParams layoutParams = new MarginLayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            layoutParams.setMarginEnd(mButtonMarginEnd);
-        } else {
-            layoutParams.rightMargin = mButtonMarginEnd;
-        }
-        layoutParams.bottomMargin = mButtonMarginBottom;
+	override fun checkLayoutParams(p: LayoutParams): Boolean = p is MarginLayoutParams
 
-        mLeftButton = new MaterialButton(context, null, R.attr.borderlessButtonStyle);
-        mLeftButton.setId(R.id.mb_button_left);
-        mLeftButton.setSingleLine(true);
-        mLeftButton.setMaxLines(1);
-        mLeftButton.setMinWidth(0);
-        mLeftButton.setMinimumWidth(0);
-        mLeftButton.setLayoutParams(layoutParams);
-        mLeftButton.setVisibility(GONE);
+	override fun generateDefaultLayoutParams(): LayoutParams =
+		MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
 
-        mRightButton = new MaterialButton(context, null, R.attr.borderlessButtonStyle);
-        mRightButton.setId(R.id.mb_button_right);
-        mRightButton.setSingleLine(true);
-        mRightButton.setMaxLines(1);
-        mRightButton.setMinWidth(0);
-        mRightButton.setMinimumWidth(0);
-        mRightButton.setLayoutParams(layoutParams);
-        mRightButton.setVisibility(GONE);
+	override fun generateLayoutParams(attrs: AttributeSet): LayoutParams =
+		MarginLayoutParams(context, attrs)
 
-        addView(mLeftButton);
-        addView(mRightButton);
-    }
+	override fun generateLayoutParams(p: LayoutParams): LayoutParams =
+		MarginLayoutParams(p)
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int widthUsed = 0;
+	/**
+	 * Returns the baseline of the left button if it's not hidden or the baseline of the right
+	 * button. If both buttons hidden returns -1.
+	 */
+	override fun getBaseline(): Int {
+		if (leftButton.visibility != GONE && leftButton.text != null) {
+			return leftButton.baseline
+		} else if (visibility != GONE && rightButton.text != null) {
+			return rightButton.baseline
+		}
+		return -1
+	}
 
-        if (mLeftButton.getVisibility() != GONE) {
-            measureChildWithMargins(mLeftButton, widthMeasureSpec, 0, heightMeasureSpec, 0);
-            widthUsed += mLeftButton.getMeasuredWidth() + mButtonMarginEnd;
-        }
+	/**
+	 * Returns the current orientation.
+	 *
+	 * @return either [.HORIZONTAL] or [.VERTICAL]
+	 */
+	@Suppress("unused")
+	@get:OrientationMode
+	var orientation: Int
+		get() = mOrientation
+		/**
+		 * Should the layout be a column or a row.
+		 *
+		 * @param orientation [.HORIZONTAL] or [.VERTICAL]. Default value is
+		 * [.HORIZONTAL].
+		 */
+		set(@OrientationMode orientation) {
+			if (mOrientation != orientation) {
+				mOrientation = orientation
+				requestLayout()
+			}
+		}
 
-        if (mRightButton.getVisibility() != GONE) {
-            measureChildWithMargins(mRightButton, widthMeasureSpec, 0, heightMeasureSpec, 0);
-            widthUsed += mRightButton.getMeasuredWidth() + mButtonMarginEnd;
-        }
+	private fun getDimen(@DimenRes dimenId: Int): Int {
+		return context.resources.getDimensionPixelSize(dimenId)
+	}
 
-        // Allow orientation change only when the both buttons are not hidden
-        if (mLeftButton.getVisibility() != GONE && mRightButton.getVisibility() != GONE) {
-            if (widthUsed > MeasureSpec.getSize(widthMeasureSpec)) {
-                mOrientation = VERTICAL;
-            } else {
-                mOrientation = HORIZONTAL;
-            }
-        }
+	companion object {
+		const val HORIZONTAL = 0
+		const val VERTICAL = 1
+	}
 
-        if (mOrientation == VERTICAL) {
-            measureVertical();
-        } else {
-            measureHorizontal();
-        }
-    }
+	init {
+		mButtonMarginEnd = getDimen(R.dimen.mb_button_margin_end)
+		mButtonMarginBottom = getDimen(R.dimen.mb_button_margin_bottom)
 
-    /**
-     * Measures the children when the orientation of this view is set to {@link #VERTICAL}.
-     */
-    private void measureVertical() {
-        int widthUsed = 0;
-        int heightUsed = 0;
+		val layoutParams = MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
 
-        if (mLeftButton.getVisibility() != GONE) {
-            widthUsed = mLeftButton.getMeasuredWidth() + mButtonMarginEnd;
-            heightUsed += mLeftButton.getMeasuredHeight() + mButtonMarginBottom;
-        }
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+			layoutParams.marginEnd = mButtonMarginEnd
+		} else {
+			layoutParams.rightMargin = mButtonMarginEnd
+		}
 
-        if (mRightButton.getVisibility() != GONE) {
-            widthUsed = Math.max(widthUsed, mRightButton.getMeasuredWidth() + mButtonMarginEnd);
-            heightUsed += mRightButton.getMeasuredHeight() + mButtonMarginBottom;
-        }
+		layoutParams.bottomMargin = mButtonMarginBottom
 
-        setMeasuredDimension(widthUsed, heightUsed);
-    }
+		leftButton = MaterialButton(context, null, R.attr.borderlessButtonStyle).apply {
+			id = R.id.mb_button_left
+			isSingleLine = true
+			maxLines = 1
+			minWidth = 0
+			minimumWidth = 0
+			this@ButtonsContainer.layoutParams = layoutParams
+			visibility = GONE
+		}
 
-    /**
-     * Measures the children when the orientation of this view is set to {@link #HORIZONTAL}.
-     */
-    private void measureHorizontal() {
-        int widthUsed = 0;
-        int heightUsed = 0;
+		rightButton = MaterialButton(context, null, R.attr.borderlessButtonStyle).apply {
+			id = R.id.mb_button_right
+			isSingleLine = true
+			maxLines = 1
+			minWidth = 0
+			minimumWidth = 0
+			this@ButtonsContainer.layoutParams = layoutParams
+			visibility = GONE
+		}
 
-        if (mLeftButton.getVisibility() != GONE) {
-            widthUsed += mLeftButton.getMeasuredWidth() + mButtonMarginEnd;
-            heightUsed = mLeftButton.getMeasuredHeight() + mButtonMarginBottom;
-        }
-
-        if (mRightButton.getVisibility() != GONE) {
-            widthUsed += mRightButton.getMeasuredWidth() + mButtonMarginEnd;
-            heightUsed = Math.max(heightUsed,
-                    mRightButton.getMeasuredHeight() + mButtonMarginBottom);
-        }
-
-        setMeasuredDimension(widthUsed, heightUsed);
-    }
-
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        if (mOrientation == VERTICAL) {
-            layoutVertical();
-        } else {
-            layoutHorizontal();
-        }
-    }
-
-    /**
-     * Position the children during a layout pass if the orientation of this view is set to
-     * {@link #VERTICAL}.
-     */
-    private void layoutVertical() {
-        int top = 0;
-        int lBtnRight = getMeasuredWidth() - mButtonMarginEnd;
-        int lBtnLeft = lBtnRight - mLeftButton.getMeasuredWidth();
-        int rBtnRight = getMeasuredWidth() - mButtonMarginEnd;
-        int rBtnLeft = rBtnRight - mRightButton.getMeasuredWidth();
-
-        if (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL) {
-            lBtnLeft = mButtonMarginEnd;
-            lBtnRight = lBtnLeft + mLeftButton.getMeasuredWidth();
-            rBtnLeft = mButtonMarginEnd;
-            rBtnRight = rBtnLeft + mRightButton.getMeasuredWidth();
-        }
-
-        if (mRightButton.getVisibility() != GONE) {
-            mRightButton.layout(rBtnLeft, top, rBtnRight, mRightButton.getMeasuredHeight());
-            top += mRightButton.getMeasuredHeight() + mButtonMarginBottom;
-        }
-
-        if (mLeftButton.getVisibility() != GONE) {
-            mLeftButton.layout(lBtnLeft, top, lBtnRight, top + mLeftButton.getMeasuredHeight());
-        }
-    }
-
-    /**
-     * Position the children during a layout pass if the orientation of this view is set to
-     * {@link #HORIZONTAL}.
-     */
-    private void layoutHorizontal() {
-        int lBtnRight = mLeftButton.getMeasuredWidth();
-        int lBtnLeft = 0;
-        int rBtnRight = getMeasuredWidth() - mButtonMarginEnd;
-        int rBtnLeft = rBtnRight - mRightButton.getMeasuredWidth();
-
-        if (ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL) {
-            rBtnLeft = mButtonMarginEnd;
-            rBtnRight = rBtnLeft + mRightButton.getMeasuredWidth();
-            lBtnRight = getMeasuredWidth();
-            lBtnLeft = lBtnRight - mLeftButton.getMeasuredWidth();
-        }
-
-        if (mLeftButton.getVisibility() != GONE) {
-            mLeftButton.layout(lBtnLeft, 0, lBtnRight, mLeftButton.getMeasuredHeight());
-        }
-
-        if (mRightButton.getVisibility() != GONE) {
-            mRightButton.layout(rBtnLeft, 0, rBtnRight, mRightButton.getMeasuredHeight());
-        }
-    }
-
-    @Override
-    protected boolean checkLayoutParams(ViewGroup.LayoutParams p) {
-        return p instanceof MarginLayoutParams;
-    }
-
-    @Override
-    protected LayoutParams generateDefaultLayoutParams() {
-        return new MarginLayoutParams(WRAP_CONTENT, WRAP_CONTENT);
-    }
-
-    @Override
-    public LayoutParams generateLayoutParams(AttributeSet attrs) {
-        return new MarginLayoutParams(getContext(), attrs);
-    }
-
-    @Override
-    protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
-        return new MarginLayoutParams(p);
-    }
-
-    /**
-     * Returns the baseline of the left button if it's not hidden or the baseline of the right
-     * button. If both buttons hidden returns -1.
-     */
-    @Override
-    public int getBaseline() {
-        if (mLeftButton.getVisibility() != GONE && mLeftButton.getText() != null) {
-            return mLeftButton.getBaseline();
-        } else if (mRightButton.getVisibility() != GONE && mRightButton.getText() != null) {
-            return mRightButton.getBaseline();
-        }
-        return -1;
-    }
-
-    /**
-     * Should the layout be a column or a row.
-     *
-     * @param orientation {@link #HORIZONTAL} or {@link #VERTICAL}. Default value is
-     *                    {@link #HORIZONTAL}.
-     */
-    public void setOrientation(@OrientationMode int orientation) {
-        if (mOrientation != orientation) {
-            mOrientation = orientation;
-            requestLayout();
-        }
-    }
-
-    /**
-     * Returns the current orientation.
-     *
-     * @return either {@link #HORIZONTAL} or {@link #VERTICAL}
-     */
-    @OrientationMode
-    public int getOrientation() {
-        return mOrientation;
-    }
-
-    public MaterialButton getLeftButton() {
-        return mLeftButton;
-    }
-
-    public MaterialButton getRightButton() {
-        return mRightButton;
-    }
-
-    private int getDimen(@DimenRes int dimenId) {
-        return getContext().getResources().getDimensionPixelSize(dimenId);
-    }
+		addView(leftButton)
+		addView(rightButton)
+	}
 }

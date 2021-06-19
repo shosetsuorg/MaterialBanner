@@ -13,56 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.sergivonavi.materialbanner
 
-package com.sergivonavi.materialbanner;
+interface BannerInterface {
+	/**
+	 * Dismisses the banner.
+	 */
+	fun dismiss()
 
-public interface BannerInterface {
+	/**
+	 * Dismisses the banner after the specified delay in milliseconds.
+	 *
+	 * @param delay The amount of time, in milliseconds, to delay starting the banner animation
+	 */
+	fun dismiss(delay: Long)
 
-    /**
-     * Dismisses the banner.
-     */
-    void dismiss();
+	/**
+	 * Interface used to allow the creator of a banner to run some code when a button in the
+	 * banner is clicked.
+	 */
+	interface OnClickListener {
+		/**
+		 * This method will be invoked when a button in the banner is clicked.
+		 *
+		 * @param banner the banner that received the click
+		 */
+		fun onClick(banner: BannerInterface)
+	}
 
-    /**
-     * Dismisses the banner after the specified delay in milliseconds.
-     *
-     * @param delay The amount of time, in milliseconds, to delay starting the banner animation
-     */
-    void dismiss(long delay);
+	/**
+	 * Interface used to allow the creator of a banner to run some code when the banner is
+	 * dismissed.
+	 */
+	interface OnDismissListener {
+		/**
+		 * This method will be invoked when the banner is dismissed.
+		 */
+		fun onDismiss()
+	}
 
-    /**
-     * Interface used to allow the creator of a banner to run some code when a button in the
-     * banner is clicked.
-     */
-    interface OnClickListener {
-
-        /**
-         * This method will be invoked when a button in the banner is clicked.
-         *
-         * @param banner the banner that received the click
-         */
-        void onClick(BannerInterface banner);
-    }
-
-    /**
-     * Interface used to allow the creator of a banner to run some code when the banner is
-     * dismissed.
-     */
-    interface OnDismissListener {
-        /**
-         * This method will be invoked when the banner is dismissed.
-         */
-        void onDismiss();
-    }
-
-    /**
-     * Interface used to allow the creator of a banner to run some code when the banner is shown.
-     */
-    interface OnShowListener {
-        /**
-         * This method will be invoked when the banner is shown.
-         */
-        void onShow();
-    }
-
+	/**
+	 * Interface used to allow the creator of a banner to run some code when the banner is shown.
+	 */
+	interface OnShowListener {
+		/**
+		 * This method will be invoked when the banner is shown.
+		 */
+		fun onShow()
+	}
 }

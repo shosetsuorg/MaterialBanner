@@ -1,7 +1,5 @@
-apply plugin: 'com.github.dcendents.android-maven'
-
-group = POM_GROUP_ID
-version = project.release.versionName
+group = "app.shosetsu.lib"
+version = "1.2.0"
 
 allprojects {
     tasks.withType(Javadoc) {

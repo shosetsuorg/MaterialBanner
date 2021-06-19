@@ -13,45 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.sergivonavi.materialbanner.internal
 
-package com.sergivonavi.materialbanner.internal;
-
-import android.content.Context;
-import android.text.Layout;
-import android.util.AttributeSet;
-
-import androidx.annotation.RestrictTo;
-import androidx.appcompat.widget.AppCompatTextView;
+import android.content.Context
+import android.util.AttributeSet
+import androidx.annotation.RestrictTo
+import androidx.appcompat.widget.AppCompatTextView
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public final class MessageView extends AppCompatTextView {
+class MessageView @JvmOverloads constructor(
+	context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : AppCompatTextView(context, attrs, defStyleAttr) {
 
-    public MessageView(Context context) {
-        super(context);
-    }
-
-    public MessageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-    }
-
-    public MessageView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    /**
-     * Return the offset of the widget's last text line baseline from the widget's top
-     * boundary. If this widget does not support baseline alignment, this method returns -1.
-     *
-     * @return the offset of the baseline of the last text line within the widget's bounds or -1
-     * if baseline alignment is not supported
-     */
-    @Override
-    public int getBaseline() {
-        Layout layout = getLayout();
-        if (layout == null) {
-            return super.getBaseline();
-        }
-        int baselineOffset = super.getBaseline() - layout.getLineBaseline(0);
-        return baselineOffset + layout.getLineBaseline(layout.getLineCount() - 1);
-    }
+	/**
+	 * Return the offset of the widget's last text line baseline from the widget's top
+	 * boundary. If this widget does not support baseline alignment, this method returns -1.
+	 *
+	 * @return the offset of the baseline of the last text line within the widget's bounds or -1
+	 * if baseline alignment is not supported
+	 */
+	override fun getBaseline(): Int {
+		val layout = layout ?: return super.getBaseline()
+		val baselineOffset = super.getBaseline() - layout.getLineBaseline(0)
+		return baselineOffset + layout.getLineBaseline(layout.lineCount - 1)
+	}
 }
