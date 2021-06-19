@@ -818,7 +818,7 @@ class Banner @JvmOverloads constructor(
 		animatorSet.playTogether(bannerAnimator, marginAnimator)
 		animatorSet.interpolator = AccelerateDecelerateInterpolator()
 		animatorSet.startDelay = delay
-		animatorSet.duration = ANIM_DURATION_SHOW.toLong()
+		animatorSet.duration = ANIM_DURATION_SHOW
 		animatorSet.addListener(mAnimatorListener)
 		animatorSet.start()
 	}
@@ -866,7 +866,7 @@ class Banner @JvmOverloads constructor(
 		animatorSet.playTogether(bannerAnimator, marginAnimator)
 		animatorSet.interpolator = AccelerateDecelerateInterpolator()
 		animatorSet.startDelay = delay
-		animatorSet.duration = ANIM_DURATION_DISMISS.toLong()
+		animatorSet.duration = ANIM_DURATION_DISMISS
 		animatorSet.addListener(mAnimatorListener)
 		animatorSet.start()
 	}
@@ -876,7 +876,7 @@ class Banner @JvmOverloads constructor(
 			// onAnimationStart is invoked immediately after calling AnimatorSet.start()
 			postDelayed({
 				mIsAnimating = true
-				if (animation.duration == ANIM_DURATION_SHOW.toLong()) {
+				if (animation.duration == ANIM_DURATION_SHOW) {
 					visibility = VISIBLE
 				}
 			}, animation.startDelay)
@@ -884,7 +884,7 @@ class Banner @JvmOverloads constructor(
 
 		override fun onAnimationEnd(animation: Animator) {
 			mIsAnimating = false
-			if (animation.duration == ANIM_DURATION_DISMISS.toLong()) {
+			if (animation.duration == ANIM_DURATION_DISMISS) {
 				visibility = GONE
 
 				// Reset to default
@@ -1317,8 +1317,8 @@ class Banner @JvmOverloads constructor(
 		private const val LAYOUT_UNDEFINED = -1
 		private const val LAYOUT_SINGLE_LINE = 0
 		private const val LAYOUT_MULTILINE = 1
-		private const val ANIM_DURATION_DISMISS = 160
-		private const val ANIM_DURATION_SHOW = 180
+		private const val ANIM_DURATION_DISMISS = 160L
+		private const val ANIM_DURATION_SHOW = 180L
 	}
 
 	init {

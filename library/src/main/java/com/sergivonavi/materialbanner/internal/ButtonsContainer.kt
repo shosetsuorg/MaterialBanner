@@ -50,13 +50,13 @@ class ButtonsContainer @JvmOverloads constructor(
 			measureChildWithMargins(leftButton, widthMeasureSpec, 0, heightMeasureSpec, 0)
 			widthUsed += leftButton.measuredWidth + mButtonMarginEnd
 		}
-		if (visibility != GONE) {
+		if (rightButton.visibility != GONE) {
 			measureChildWithMargins(rightButton, widthMeasureSpec, 0, heightMeasureSpec, 0)
 			widthUsed += measuredWidth + mButtonMarginEnd
 		}
 
 		// Allow orientation change only when the both buttons are not hidden
-		if (leftButton.visibility != GONE && visibility != GONE) {
+		if (leftButton.visibility != GONE && rightButton.visibility != GONE) {
 			mOrientation = if (widthUsed > MeasureSpec.getSize(widthMeasureSpec)) {
 				VERTICAL
 			} else {
@@ -80,7 +80,7 @@ class ButtonsContainer @JvmOverloads constructor(
 			widthUsed = leftButton.measuredWidth + mButtonMarginEnd
 			heightUsed += leftButton.measuredHeight + mButtonMarginBottom
 		}
-		if (visibility != GONE) {
+		if (rightButton.visibility != GONE) {
 			widthUsed = max(widthUsed, measuredWidth + mButtonMarginEnd)
 			heightUsed += measuredHeight + mButtonMarginBottom
 		}
@@ -97,7 +97,7 @@ class ButtonsContainer @JvmOverloads constructor(
 			widthUsed += leftButton.measuredWidth + mButtonMarginEnd
 			heightUsed = leftButton.measuredHeight + mButtonMarginBottom
 		}
-		if (visibility != GONE) {
+		if (rightButton.visibility != GONE) {
 			widthUsed += measuredWidth + mButtonMarginEnd
 			heightUsed = max(
 				heightUsed,
@@ -131,7 +131,7 @@ class ButtonsContainer @JvmOverloads constructor(
 			rBtnLeft = mButtonMarginEnd
 			rBtnRight = rBtnLeft + measuredWidth
 		}
-		if (visibility != GONE) {
+		if (rightButton.visibility != GONE) {
 			layout(rBtnLeft, top, rBtnRight, measuredHeight)
 			top += measuredHeight + mButtonMarginBottom
 		}
@@ -158,7 +158,7 @@ class ButtonsContainer @JvmOverloads constructor(
 		if (leftButton.visibility != GONE) {
 			leftButton.layout(lBtnLeft, 0, lBtnRight, leftButton.measuredHeight)
 		}
-		if (visibility != GONE) {
+		if (rightButton.visibility != GONE) {
 			layout(rBtnLeft, 0, rBtnRight, measuredHeight)
 		}
 	}
@@ -181,7 +181,7 @@ class ButtonsContainer @JvmOverloads constructor(
 	override fun getBaseline(): Int {
 		if (leftButton.visibility != GONE && leftButton.text != null) {
 			return leftButton.baseline
-		} else if (visibility != GONE && rightButton.text != null) {
+		} else if (rightButton.visibility != GONE && rightButton.text != null) {
 			return rightButton.baseline
 		}
 		return -1
